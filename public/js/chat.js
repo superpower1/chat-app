@@ -4,9 +4,17 @@ const $messageForm = document.querySelector('#chat-form');
 const $messageFormInput = $messageForm.querySelector('input');
 const $messageFormBtn = $messageForm.querySelector('button');
 const $sendLocationBtn = document.querySelector('#share-geo-btn');
+const $messageContainer = document.querySelector('#message-container');
 
-socket.on('message', (msg) => {
-  console.log(msg)
+const messageTemplate = document.querySelector('#message-template').innerHTML;
+const locationTemplate = document.querySelector('#location-template').innerHTML;
+
+socket.on('message', ({ text, createdAt }) => {
+  $messageContainer.insertAdjacentHTML('beforeend', Mustache.render(messageTemplate, { message: text, time: moment(createdAt).format('hh:mm a DD MMM YYYY') }))
+})
+
+socket.on('locationMessage', ({ url, createdAt }) => {
+  $messageContainer.insertAdjacentHTML('beforeend', Mustache.render(locationTemplate, { href: url, time: moment(createdAt).format('hh:mm a DD MMM YYYY') }))
 })
 
 $messageForm.addEventListener('submit', (e) => {
