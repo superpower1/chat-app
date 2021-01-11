@@ -1,0 +1,26 @@
+.app {
+  display: flex;
+}
+
+.sidebar {
+  width: 100px;
+}
+
+.messages {
+  height: 200px;
+  overflow: scroll;
+}
+
+.message-container {
+  margin-bottom: 10px;
+}
+
+.message-name {
+  font-weight: 600;
+}
+
+.message-content {
+  padding-left: 20px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}

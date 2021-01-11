@@ -6,34 +6,17 @@
   <title>Chat App</title>
 </head>
 <body>
-  <h1>Chat App</h1>
-  <div id="message-container">
-
+  <div class="centered-form">
+    <div class="centered-form__box">
+      <h1>Join</h1>
+      <form action="/chat.html">
+        <label for="username">Display name</label>
+        <input type="text" name="username" placeholder="Display name" required>
+        <label for="room">Room</label>
+        <input type="text" name="room" placeholder="Room" required>
+        <button>Join</button>
+      </form>
+    </div>
   </div>
-  <form id="chat-form">
-    <input type="text" name="message" />
-    <button>Send</button>
-  </form>
-  <button id="share-geo-btn">Send Location</button>
-
-  <script id="message-template" type="text/html">
-    <div>
-      <span>{{time}}</span>
-      <p>{{message}}</p>  
-    </div>
-  </script>
-
-  <script id="location-template" type="text/html">
-    <div>
-      <span>{{time}}</span>
-      <a href="{{href}}" target="_blank">My location</a>
-    </div>
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.1.0/mustache.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.4/qs.min.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/chat.js"></script>
 </body>
 </html>

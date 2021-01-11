@@ -4,6 +4,7 @@ const http = require('http');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
 const { generateMessage, generateLocation } = require('./utils/message')
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users')
 
 const port = 3000;
 const publicDir = path.join(__dirname, '../public')
@@ -17,16 +18,34 @@ app.use(express.static(publicDir));
 io.on('connection', (socket) => {
   console.log('New socket.io connection!')
 
-  socket.emit('message', generateMessage('Welcome to the chat room!'))
+  socket.on('join', ({ username, room }, cb) => {
+    const { error, user } = addUser({ id: socket.id, username, room })
 
-  socket.broadcast.emit('message', generateMessage('A new user has joined!'))
+    if (error) {
+      return cb(error)
+    }
+
+    socket.join(user.room);
+
+    socket.emit('message', generateMessage('Admin', 'Welcome to the chat room!'))
+
+    socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined!`))
+
+    io.to(user.room).emit('roomData', {
+      room: user.room,
+      users: getUsersInRoom(user.room)
+    })
+
+    cb()
+  })
 
   socket.on('sendMessage', (newMsg, cb) => {
     const filter = new Filter();
     if (filter.isProfane(newMsg)) {
       cb('Profanity is not allowed!')
     } else {
-      io.emit('message', generateMessage(newMsg));
+      const { username, room } = getUser(socket.id);
+      io.to(room).emit('message', generateMessage(username, newMsg));
       cb()
     }
   })
@@ -34,7 +53,8 @@ io.on('connection', (socket) => {
   socket.on('sendLocation', (location, cb) => {
     const { latitude, longitude } = location;
     if (latitude && longitude) {
-      io.emit('locationMessage', generateLocation(`https://google.com/maps?q=${latitude},${longitude}`))
+      const { username, room } = getUser(socket.id);
+      io.to(room).emit('locationMessage', generateLocation(username, `https://google.com/maps?q=${latitude},${longitude}`))
       cb()
     } else {
       cb('Invalid location!')
@@ -42,7 +62,15 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
-    io.emit('message', generateMessage('A user has left the chat room!'))
+    const user = removeUser(socket.id)
+
+    if (user) {
+      io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left the chat room!`))
+      io.to(user.room).emit('roomData', {
+        room: user.room,
+        users: getUsersInRoom(user.room)
+      })
+    }
   })
 })
 

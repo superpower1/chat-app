@@ -4,17 +4,60 @@ const $messageForm = document.querySelector('#chat-form');
 const $messageFormInput = $messageForm.querySelector('input');
 const $messageFormBtn = $messageForm.querySelector('button');
 const $sendLocationBtn = document.querySelector('#share-geo-btn');
-const $messageContainer = document.querySelector('#message-container');
+const $messageContainer = document.querySelector('#messages');
+const $sidebarContainer = document.querySelector('#sidebar');
 
 const messageTemplate = document.querySelector('#message-template').innerHTML;
 const locationTemplate = document.querySelector('#location-template').innerHTML;
+const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML;
 
-socket.on('message', ({ text, createdAt }) => {
-  $messageContainer.insertAdjacentHTML('beforeend', Mustache.render(messageTemplate, { message: text, time: moment(createdAt).format('hh:mm a DD MMM YYYY') }))
+const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
+
+const autoscroll = () => {
+  const $newMessage = $messageContainer.lastElementChild;
+
+  const newMessageStyles = getComputedStyle($newMessage)
+  const newMessageMargin = parseInt(newMessageStyles.marginBottom)
+  const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+
+  const visibleHeight = $messageContainer.offsetHeight;
+
+  const containerHeight = $messageContainer.scrollHeight;
+
+  const scrollOffset = $messageContainer.scrollTop + visibleHeight;
+
+  if (containerHeight - newMessageHeight <= scrollOffset) {
+    $messageContainer.scrollTop = $messageContainer.scrollHeight
+  }
+}
+
+socket.on('message', ({ username, text, createdAt }) => {
+  $messageContainer.insertAdjacentHTML('beforeend', Mustache.render(messageTemplate, {
+    name: username,
+    message: text, 
+    time: moment(createdAt).format('hh:mm a DD MMM YYYY') 
+  }))
+  autoscroll()
 })
 
-socket.on('locationMessage', ({ url, createdAt }) => {
-  $messageContainer.insertAdjacentHTML('beforeend', Mustache.render(locationTemplate, { href: url, time: moment(createdAt).format('hh:mm a DD MMM YYYY') }))
+socket.on('locationMessage', ({ username, url, createdAt }) => {
+  $messageContainer.insertAdjacentHTML('beforeend', Mustache.render(locationTemplate, { 
+    name: username,
+    href: url, 
+    time: moment(createdAt).format('hh:mm a DD MMM YYYY') 
+  }))
+  autoscroll()
+})
+
+socket.on('roomData', ({ room, users }) => {
+  $sidebarContainer.innerHTML = Mustache.render(sidebarTemplate, {
+    room,
+    users
+  })
+})
+
+socket.emit('join', { username, room }, (error) => {
+
 })
 
 $messageForm.addEventListener('submit', (e) => {
@@ -53,3 +96,4 @@ $sendLocationBtn.addEventListener('click', () => {
     alert('Geolocation is not supported by your browser!')
   }
 })
+
